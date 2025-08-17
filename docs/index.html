@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threejs glb viewer</title>
+</head>
+<script>
+  var model = null;
+</script>
+    <script type="module">
+        import * as THREE from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/three.module.js';
+        import { GLTFLoader } from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/GLTFLoader.js';
+        import { OrbitControls } from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/OrbitControls.js';
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+
+
+        camera.position.z = 5;
+
+        // controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; // an animation effect
+        controls.dampingFactor = 0.25;
+        controls.enableZoom = true;
+
+        // add 4 lights
+        const ambientLight = new THREE.AmbientLight(0x404040); // Soft
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(1, 1, 1).normalize();
+        scene.add(directionalLight);
+        const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+        pointLight.position.set(5, 5, 5);
+        scene.add(pointLight);
+
+        setInterval(() => {
+            loadModel('sample.glb?t=' + new Date().getTime());
+            console.log("Model loaded");
+            controls.update();
+        }, 1000 / 100); 
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        window.addEventListener('resize', onWindowResize, false);
+
+        function loadModel(url) {
+
+        const loader = new GLTFLoader();
+        loader.load('sample.glb', function (gltf) {
+            scene.add(gltf.scene);
+            gltf.scene.scale.set(4, 4, 4); // Adjust scale as needed
+            gltf.scene.position.set(0, 0, 0); // Center the model
+            if (model) {
+                scene.remove(model);
+            }
+            else{
+            animate();
+
+            }
+            model = gltf.scene;
+        }, undefined, function (error) {
+            console.error(error);
+        });
+        }
+    </script>
+<body style="margin: 0; overflow: hidden;">
+</body>
+</html>
