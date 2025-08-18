@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Threejs glb viewer</title>
+    <title>Motion GLB</title>
 </head>
 <script>
   var model = null;
@@ -12,6 +12,14 @@
         import * as THREE from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/three.module.js';
         import { GLTFLoader } from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/GLTFLoader.js';
         import { OrbitControls } from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/OrbitControls.js';
+
+        //stats
+
+        import Stats from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/stats.module.js';
+
+        const stats = new Stats();
+        stats.showPanel(0); // 0: fps, 1: ms, 2: memory
+        document.body.appendChild(stats.dom);
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -29,21 +37,42 @@
         controls.dampingFactor = 0.25;
         controls.enableZoom = true;
 
-        // add 4 lights
         const ambientLight = new THREE.AmbientLight(0x404040); // Soft
         scene.add(ambientLight);
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(1, 1, 1).normalize();
+
+        // 4 spot lights
+        const spotLight1 = new THREE.SpotLight(0xffffff, 10);
+        spotLight1.position.set(1, 1, 1);
+        spotLight1.castShadow = true;
+        scene.add(spotLight1);
+
+        const spotLight2 = new THREE.SpotLight(0xffffff, 10);
+        spotLight2.position.set(-1, 1, 1);
+        spotLight2.castShadow = true;
+        scene.add(spotLight2);
+
+        const spotLight3 = new THREE.SpotLight(0xffffff, 10);
+        spotLight3.position.set(1, -1, 1);
+        spotLight3.castShadow = true;
+        scene.add(spotLight3);
+
+        const spotLight4 = new THREE.SpotLight(0xffffff, 10);
+        spotLight4.position.set(-1, -1, 1);
+        spotLight4.castShadow = true;
+        scene.add(spotLight4);
+
+        //directional light on top
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 10);
+        directionalLight.position.set(0, 1, 0);
+        directionalLight.castShadow = true;
         scene.add(directionalLight);
-        const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-        pointLight.position.set(5, 5, 5);
-        scene.add(pointLight);
 
         setInterval(() => {
             loadModel('sample.glb?t=' + new Date().getTime());
             console.log("Model loaded");
+                        stats.update();
             controls.update();
-        }, 1000 / 100); 
+        }, 1000 / 60); 
 
         function animate() {
             requestAnimationFrame(animate);
@@ -68,6 +97,7 @@
                 scene.remove(model);
             }
             else{
+                stats.begin();
             animate();
 
             }
