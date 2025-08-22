@@ -44,5 +44,12 @@ outputs = pipeline.run_multi_image(
 outputs['gaussian'][0].save_ply("sample.ply")
 
 # make glb
-render_utils.save_glb("sample.glb", outputs['gaussian'][0], texture_resolution=512)
+glb = postprocessing_utils.to_glb(
+    outputs['gaussian'][0],
+    outputs['mesh'][0],
+    # Optional parameters
+    simplify=0.95,          # Ratio of triangles to remove in the simplification process
+    texture_size=1024,      # Size of the texture used for the GLB
+)
+glb.export("sample.glb")
 exit(0)
