@@ -42,4 +42,7 @@ outputs = pipeline.run_multi_image(
 # - outputs['mesh']: a list of meshes
 
 outputs['gaussian'][0].save_ply("sample.ply")
+
+# make glb
+render_utils.save_glb("sample.glb", outputs['gaussian'][0], texture_resolution=512)
 exit(0)
