@@ -21,6 +21,10 @@ fs.readdir(sourceDir, (err, files) => {
         var srcFile = path.join(sourceDir, file);
         var destFile = path.join(destDir, file);
 
+        console.log('Copying:', srcFile, 'to', destFile);
+
+        /*
+
         fs.copyFile(srcFile, destFile, err => {
             if (err) {
                 console.error('Error copying file:', err);
@@ -28,5 +32,6 @@ fs.readdir(sourceDir, (err, files) => {
                 console.log('Copied:', srcFile, 'to', destFile);
             }
         });
+        */
     });
 });
