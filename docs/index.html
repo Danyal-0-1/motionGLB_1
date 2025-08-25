@@ -9,7 +9,9 @@
 <script>
     var model = null;
     var flag = false;
+    const modelSwitchInterval = 1000 / 30;
 </script>
+
 <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/three.module.js';
     import { GLTFLoader } from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/GLTFLoader.js';
@@ -67,7 +69,6 @@
     scene.add(directionalLight);
 
     let lastModelSwitch = 0;
-    const modelSwitchInterval = 1000 / 30;
 
     function animate() {
         requestAnimationFrame(animate);
