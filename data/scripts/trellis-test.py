@@ -8,7 +8,7 @@ import numpy as np
 import imageio
 from PIL import Image
 from trellis.pipelines import TrellisImageTo3DPipeline
-from trellis.utils import render_utils
+from trellis.utils import render_utils, postprocessing_utils
 
 # Load a pipeline from a model folder or a Hugging Face model hub.
 pipeline = TrellisImageTo3DPipeline.from_pretrained("microsoft/TRELLIS-image-large")
@@ -41,7 +41,7 @@ outputs = pipeline.run_multi_image(
 # - outputs['radiance_field']: a list of radiance fields
 # - outputs['mesh']: a list of meshes
 
-outputs['gaussian'][0].save_ply("sample.ply")
+#outputs['gaussian'][0].save_ply("sample.ply")
 
 # make glb
 glb = postprocessing_utils.to_glb(
@@ -51,5 +51,5 @@ glb = postprocessing_utils.to_glb(
     simplify=0.95,          # Ratio of triangles to remove in the simplification process
     texture_size=1024,      # Size of the texture used for the GLB
 )
-glb.export("sample.glb")
+glb.export("sample1.glb")
 exit(0)
