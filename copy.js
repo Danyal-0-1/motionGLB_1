@@ -21,7 +21,7 @@ async function processFiles() {
         if (!fs.lstatSync(source).isDirectory()) {
             continue;
         }
-        if (!fs.existsSync(destination)) {
+        if (fs.existsSync(destination)) {
             continue;
         }
 
