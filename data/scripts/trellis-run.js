@@ -32,7 +32,7 @@ async function processFiles() {
         try {
             // Wait for git commands to complete
             await execAsync(`python trellis-run.py ${folderPath}`);
-            console.log(`File ${destination} added to git.`);
+            console.log(`File ${destination} created.`);
         } catch (err) {
             console.error(`Error processing ${file}: ${err}`);
         }
