@@ -5,7 +5,7 @@
 var path = require('path');
 var args = process.argv.slice(2); // Skips 'node' and script path
 
-var folderPath = "./images"
+var folderPath = "./images/"
 
 // get all folders in folderPath
 var fs = require('fs');
@@ -14,6 +14,7 @@ var files = fs.readdirSync(folderPath);
 
 async function processFiles() {
     for (const file of files) {
+        println(file);
         const source = path.join(folderPath, file);
         const destination = path.join(folderPath, file, "output.glb");
 
