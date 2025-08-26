@@ -15,8 +15,8 @@ var files = fs.readdirSync(folderPath);
 async function processFiles() {
     for (const file of files) {
         const source = path.join(folderPath, file);
-        const destination = path.join(folderPath, "output.glb");
-        
+        const destination = path.join(folderPath, file, "output.glb");
+
         // if file is not directory
         if (!fs.lstatSync(source).isDirectory()) {
             continue;
