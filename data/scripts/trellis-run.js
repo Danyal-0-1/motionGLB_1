@@ -5,7 +5,7 @@
 var path = require('path');
 var args = process.argv.slice(2); // Skips 'node' and script path
 
-var folderPath = "../assets/";
+var folderPath = "./images"
 
 // get all folders in folderPath
 var fs = require('fs');
