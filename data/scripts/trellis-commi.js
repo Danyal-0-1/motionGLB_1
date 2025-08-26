@@ -13,7 +13,7 @@ async function processFiles() {
             await execAsync(`git add *; git commit -m "Auto commit";git push`);
             console.log(`Changes pushed to git.`);
         } catch (err) {
-            console.error(`Error processing git commands: ${err}`);
+            console.error(`Error processing git commands : ${err}`);
         }
     
 }
