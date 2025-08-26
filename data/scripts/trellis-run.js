@@ -14,7 +14,7 @@ var files = fs.readdirSync(folderPath);
 
 async function processFiles() {
     for (const file of files) {
-        println(file);
+        console.log(`Processing ${file}...`);
         const source = path.join(folderPath, file);
         const destination = path.join(folderPath, file, "output.glb");
 
