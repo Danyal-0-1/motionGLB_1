@@ -8,9 +8,9 @@
 </head>
 <script>
     var model = null;
-    const modelSwitchInterval = 1000 / 30;
+    const modelSwitchInterval = 1000 / 20;
     var currSnap = 1;
-    var lastSnap = 700;
+    var lastSnap = 900;
 </script>
 
 <script type="module">
@@ -111,18 +111,13 @@
             gltf.scene.position.set(0, 0, 0); // Center the model
             if (model) {
                 function y(m) {
-                     setTimeout(() => {
-                    scene.remove(m);
-                    stats.update();
+                    setTimeout(() => {
+                        scene.remove(m);
+                        info.innerHTML = "<h1>" + currSnap + "</h1>";
                     }, modelSwitchInterval / 1);
                 }
                 y(model);
-
-                                   /*
-                setTimeout(() => {
-                   y(model);
-                }, modelSwitchInˇterval / 1);
-                */
+                stats.update();
             } else {
                 stats.begin();
             }
@@ -134,6 +129,7 @@
 </script>
 
 <body style="margin: 0; overflow: hidden; background-color: black;">
+    <div id="info" style="color: white; position: absolute; bottom: 0; left: 30px; padding: 10px;"></div>
 </body>
 
 </html>
