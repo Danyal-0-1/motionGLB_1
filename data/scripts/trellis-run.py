@@ -66,5 +66,8 @@ glb = postprocessing_utils.to_glb(
     simplify=0.95,          # Ratio of triangles to remove in the simplification process
     texture_size=1024,      # Size of the texture used for the GLB
 )
-glb.export("sample1.glb")
+
+glb.export(
+    os.path.join(image_folder, "output.glb")
+)
 exit(0)
