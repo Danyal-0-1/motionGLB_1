@@ -8,8 +8,13 @@
 </head>
 <script>
     var model = null;
-    var flag = false;
-    const modelSwitchInterval = 1000 / 30;
+    var nextModel = null;
+    var morphProgress = 0;
+    var isMorphing = false;
+    const modelSwitchInterval = 1000 / 10;
+    const morphDuration = 500; // milliseconds
+    var currSnap = 1;
+    var lastSnap = 500;
 </script>
 
 <script type="module">
@@ -77,16 +82,15 @@
         
         // Switch models at specified interval
         if (currentTime - lastModelSwitch >= modelSwitchInterval) {
-            if (flag) {
-                loadModel('sample.glb?t=' + currentTime);
-                // console.log("Model loaded");
-                flag = false;
-            } else {
-                loadModel('sample2.glb?t=' + currentTime);
-                // console.log("Model loaded 2");
-                flag = true;
-            }
+            var folder = String(currSnap).padStart(5, '0');
+            var file = `../data/scripts/images/${folder}/output.glb`;
+            loadModel(file);
             lastModelSwitch = currentTime;
+            if(currSnap < lastSnap) {
+                currSnap++;
+            } else {
+                currSnap = 1;
+            }
         }
         
         controls.update();
