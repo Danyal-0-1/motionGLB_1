@@ -11,9 +11,9 @@ async function processFiles() {
         try {
             // Wait for git commands to complete
             await execAsync(`git add *; git commit -m "Auto commit";git push`);
-            console.log(`File ${destination} created.`);
+            console.log(`Changes pushed to git.`);
         } catch (err) {
-            console.error(`Error processing ${file}: ${err}`);
+            console.error(`Error processing git commands: ${err}`);
         }
     
 }
