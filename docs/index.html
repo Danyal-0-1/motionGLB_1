@@ -8,9 +8,6 @@
 </head>
 <script>
     var model = null;
-    var nextModel = null;
-    var morphProgress = 0;
-    var isMorphing = false;
     const modelSwitchInterval = 1000 / 10;
     var currSnap = 1;
     var lastSnap = 500;
@@ -113,8 +110,19 @@
             gltf.scene.scale.set(4, 4, 4); // Adjust scale as needed
             gltf.scene.position.set(0, 0, 0); // Center the model
             if (model) {
-                scene.remove(model);
-                stats.update();
+                function y(m) {
+                     setTimeout(() => {
+                    scene.remove(m);
+                    stats.update();
+                    }, modelSwitchInterval / 1);
+                }
+                                   y(model);
+
+                                   /*
+                setTimeout(() => {
+                   y(model);
+                }, modelSwitchInterval / 1);
+                */
             } else {
                 stats.begin();
             }
