@@ -5,6 +5,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Motion GLB</title>
+    <style>
+        #seekbar-container:hover #seekbar-thumb {
+            opacity: 1 !important;
+            transform: translateY(-50%) scale(1.2) !important;
+        }
+        
+        #seekbar-container:hover {
+            height: 16px !important;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4) !important;
+        }
+        
+        #seekbar-container:active {
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5) !important;
+        }
+        
+        #seekbar-container {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+    </style>
 </head>
 <script>
     var model = null;
@@ -227,8 +249,8 @@
 
     // Top spotlight for focused model illumination
     const topSpotlight = new THREE.SpotLight(0xffffff, 2.0); // Bright white spotlight
-    topSpotlight.position.set(0, 15, 0); // Positioned directly above
-    topSpotlight.target.position.set(0, 0, 0); // Targeting center of scene
+    topSpotlight.position.set(0, 115, 0); // Positioned directly above
+    topSpotlight.target.position.set(0, 15, 0); // Targeting center of scene
     topSpotlight.angle = Math.PI / 6; // 30 degree cone
     topSpotlight.penumbra = 0.3; // Soft edge falloff
     topSpotlight.decay = 1; // Natural light falloff
@@ -295,6 +317,7 @@
     function updateSeekbar() {
         const progress = (currSnap / lastSnap) * 100;
         const seekbarFill = document.getElementById('seekbar-fill');
+        const seekbarThumb = document.getElementById('seekbar-thumb');
         const frameInfo = document.getElementById('info');
         const progressText = document.getElementById('progress-text');
         
@@ -302,12 +325,95 @@
             seekbarFill.style.width = progress + '%';
         }
         if (frameInfo) {
-            frameInfo.innerHTML = `<h1>${currSnap} / ${lastSnap}</h1>`;
+           // frameInfo.innerHTML = `<h1>${currSnap} / ${lastSnap}</h1>`;
         }
         if (progressText) {
             progressText.textContent = Math.round(progress) + '%';
         }
     }
+
+    // Interactive seek functionality
+    let isDragging = false;
+    let wasPlaying = false;
+
+    function seekToPosition(x) {
+        const seekbarContainer = document.getElementById('seekbar-container');
+        const rect = seekbarContainer.getBoundingClientRect();
+        const percentage = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
+        const targetFrame = Math.round(percentage * lastSnap) || 1;
+        
+        currSnap = Math.max(1, Math.min(lastSnap, targetFrame));
+        
+        // Load the targeted frame immediately
+        const folder = String(currSnap).padStart(5, '0');
+        const file = `../data/scripts/images/${folder}/output.glb`;
+        loadModel(file);
+        
+        // Update the seekbar display
+        updateSeekbar();
+    }
+
+    // Add event listeners for interactive seeking
+    document.addEventListener('DOMContentLoaded', function() {
+        const seekbarContainer = document.getElementById('seekbar-container');
+        
+        if (seekbarContainer) {
+            // Mouse events
+            seekbarContainer.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                wasPlaying = true; // Assume was playing, pause during seek
+                seekToPosition(e.clientX);
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (isDragging) {
+                    seekToPosition(e.clientX);
+                    e.preventDefault();
+                }
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    // Resume playing after seeking
+                    lastModelSwitch = Date.now();
+                }
+            });
+
+            // Touch events for mobile
+            seekbarContainer.addEventListener('touchstart', function(e) {
+                isDragging = true;
+                wasPlaying = true;
+                const touch = e.touches[0];
+                seekToPosition(touch.clientX);
+                e.preventDefault();
+            });
+
+            document.addEventListener('touchmove', function(e) {
+                if (isDragging) {
+                    const touch = e.touches[0];
+                    seekToPosition(touch.clientX);
+                    e.preventDefault();
+                }
+            });
+
+            document.addEventListener('touchend', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    lastModelSwitch = Date.now();
+                }
+            });
+
+            // Click to seek
+            seekbarContainer.addEventListener('click', function(e) {
+                if (!isDragging) {
+                    seekToPosition(e.clientX);
+                    lastModelSwitch = Date.now();
+                }
+            });
+        }
+    });
 
     function loadModel(url) {
         const loader = new GLTFLoader();
@@ -338,26 +444,45 @@
 <body style="margin: 0; overflow: hidden; background-color: black;">
     <div id="info" style="color: white; position: absolute; bottom: 60px; left: 30px; padding: 10px;"></div>
     
-    <!-- Seekbar -->
+    <!-- Interactive Seekbar -->
     <div id="seekbar-container" style="
         position: absolute; 
         bottom: 20px; 
         left: 20px; 
         right: 20px; 
-        height: 8px; 
+        height: 12px; 
         background-color: rgba(255, 255, 255, 0.3); 
-        border-radius: 4px;
+        border-radius: 6px;
         overflow: hidden;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    ">
+        cursor: pointer;
+        transition: height 0.2s ease, box-shadow 0.2s ease;
+    " onmouseover="this.style.height='16px'; this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.4)'" 
+       onmouseout="this.style.height='12px'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.3)'">
         <div id="seekbar-fill" style="
             height: 100%; 
             background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
-            border-radius: 4px;
+            border-radius: 6px;
             width: 0%; 
             transition: width 0.1s ease-out;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
-        "></div>
+            position: relative;
+        ">
+            <!-- Seek handle/thumb -->
+            <div id="seekbar-thumb" style="
+                position: absolute;
+                right: -6px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 12px;
+                height: 12px;
+                background: white;
+                border-radius: 50%;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+                opacity: 0;
+                transition: opacity 0.2s ease, transform 0.2s ease;
+            "></div>
+        </div>
     </div>
     
     <!-- Progress text -->
