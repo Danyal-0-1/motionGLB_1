@@ -30,7 +30,7 @@
         /* Play/Pause Button Styles */
         #play-pause-button {
             position: absolute;
-            bottom: 12px; /* Align center with other elements */
+            bottom: 20px;
             left: 30px;
             width: 40px;
             height: 40px;
@@ -107,7 +107,7 @@
 </head>
 <script>
     var model = null;
-    const modelSwitchInterval = 1000 / 20;
+    const modelSwitchInterval = 1000 / 5;
     var currSnap = 1;
     var lastSnap = 1000;
     var isPlaying = true; // Track play/pause state
@@ -536,26 +536,113 @@
     function loadModel(url) {
         const loader = new GLTFLoader();
         loader.load(url, function (gltf) {
-            scene.add(gltf.scene);
-            gltf.scene.scale.set(4, 4, 4); // Adjust scale as needed
-            gltf.scene.position.set(0, -.7, 0); // Center the model
+            const newModel = gltf.scene;
+            newModel.scale.set(4, 4, 4);
+            newModel.position.set(0, -.7, 0);
+            
             if (model) {
-                function y(m) {
-                    setTimeout(() => {
-                        scene.remove(m);
-                    }, modelSwitchInterval / 1);
-                }
-                y(model);
+                // Add new model to scene
+                scene.add(newModel);
+                
+                // Make new model initially transparent
+                newModel.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material = child.material.clone();
+                        child.material.transparent = true;
+                        child.material.opacity = 0;
+                    }
+                });
+                
+                // Start cinematic morphing animation
+                cinematicMorph(model, newModel, () => {
+                    // Callback when morphing is complete
+                    scene.remove(model);
+                    model = newModel;
+                });
+                
                 stats.update();
             } else {
+                // First model load
+                scene.add(newModel);
+                model = newModel;
                 stats.begin();
-                // Initialize seekbar on first load
                 updateSeekbar();
             }
-            model = gltf.scene;
         }, undefined, function (error) {
             console.error(error);
         });
+    }
+
+    function cinematicMorph(fromModel, toModel, onComplete) {
+        const morphDuration = modelSwitchInterval * .1; // Slightly longer for cinematic effect
+        const startTime = Date.now();
+        
+        function animateMorph() {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / morphDuration, 1);
+            
+            // Cinematic easing with more dramatic curve
+            const easedProgress = progress < 0.5 
+                ? 2 * progress * progress * progress  // Ease in (cubic)
+                : 1 - Math.pow(-2 * progress + 2, 3) / 2; // Ease out (cubic)
+            
+            // Cinematic fade with slight overlap for smoother transition
+            const fadeOutStart = 0;
+            const fadeOutEnd = 0.7;
+            const fadeInStart = 0.3;
+            const fadeInEnd = 1;
+            
+            // Calculate fade values with overlap
+            let fadeOut = 1;
+            let fadeIn = 0;
+            
+            if (progress >= fadeOutStart && progress <= fadeOutEnd) {
+                const fadeOutProgress = (progress - fadeOutStart) / (fadeOutEnd - fadeOutStart);
+                fadeOut = 1 - (fadeOutProgress * fadeOutProgress); // Quadratic fade out
+            } else if (progress > fadeOutEnd) {
+                fadeOut = 0;
+            }
+            
+            if (progress >= fadeInStart && progress <= fadeInEnd) {
+                const fadeInProgress = (progress - fadeInStart) / (fadeInEnd - fadeInStart);
+                fadeIn = fadeInProgress * fadeInProgress; // Quadratic fade in
+            }
+            
+            // Apply fading to old model
+            fromModel.traverse((child) => {
+                if (child.isMesh) {
+                    if (!child.material.transparent) {
+                        child.material = child.material.clone();
+                        child.material.transparent = true;
+                    }
+                    child.material.opacity = fadeOut;
+                }
+            });
+            
+            // Apply fading to new model
+            toModel.traverse((child) => {
+                if (child.isMesh) {
+                    child.material.opacity = fadeIn;
+                }
+            });
+            
+            // Subtle cinematic lighting variation
+            const lightIntensity = 1 + (Math.sin(easedProgress * Math.PI * 2) * 0.1);
+            if (keyLight) keyLight.intensity = 1.2 * lightIntensity;
+            
+            if (progress >= 1) {
+                // Reset lighting to normal
+                if (keyLight) keyLight.intensity = 1.2;
+                // Morphing complete
+                onComplete();
+            } else {
+                // Continue morphing
+                requestAnimationFrame(animateMorph);
+            }
+        }
+        
+        // Start the cinematic morphing animation
+        animateMorph();
     }
 </script>
 
