@@ -10,7 +10,7 @@
     var model = null;
     const modelSwitchInterval = 1000 / 20;
     var currSnap = 1;
-    var lastSnap = 900;
+    var lastSnap = 1000;
 </script>
 
 <script type="module">
@@ -82,6 +82,10 @@
             var file = `../data/scripts/images/${folder}/output.glb`;
             loadModel(file);
             lastModelSwitch = currentTime;
+            
+            // Update seekbar progress
+            updateSeekbar();
+            
             if(currSnap < lastSnap) {
                 currSnap++;
             } else {
@@ -103,6 +107,23 @@
     }
     window.addEventListener('resize', onWindowResize, false);
 
+    function updateSeekbar() {
+        const progress = (currSnap / lastSnap) * 100;
+        const seekbarFill = document.getElementById('seekbar-fill');
+        const frameInfo = document.getElementById('info');
+        const progressText = document.getElementById('progress-text');
+        
+        if (seekbarFill) {
+            seekbarFill.style.width = progress + '%';
+        }
+        if (frameInfo) {
+            frameInfo.innerHTML = `<h1>${currSnap} / ${lastSnap}</h1>`;
+        }
+        if (progressText) {
+            progressText.textContent = Math.round(progress) + '%';
+        }
+    }
+
     function loadModel(url) {
         const loader = new GLTFLoader();
         loader.load(url, function (gltf) {
@@ -113,13 +134,14 @@
                 function y(m) {
                     setTimeout(() => {
                         scene.remove(m);
-                        info.innerHTML = "<h1>" + currSnap + "</h1>";
                     }, modelSwitchInterval / 1);
                 }
                 y(model);
                 stats.update();
             } else {
                 stats.begin();
+                // Initialize seekbar on first load
+                updateSeekbar();
             }
             model = gltf.scene;
         }, undefined, function (error) {
@@ -129,7 +151,42 @@
 </script>
 
 <body style="margin: 0; overflow: hidden; background-color: black;">
-    <div id="info" style="color: white; position: absolute; bottom: 0; left: 30px; padding: 10px;"></div>
+    <div id="info" style="color: white; position: absolute; bottom: 60px; left: 30px; padding: 10px;"></div>
+    
+    <!-- Seekbar -->
+    <div id="seekbar-container" style="
+        position: absolute; 
+        bottom: 20px; 
+        left: 20px; 
+        right: 20px; 
+        height: 8px; 
+        background-color: rgba(255, 255, 255, 0.3); 
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    ">
+        <div id="seekbar-fill" style="
+            height: 100%; 
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
+            border-radius: 4px;
+            width: 0%; 
+            transition: width 0.1s ease-out;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+        "></div>
+    </div>
+    
+    <!-- Progress text -->
+    <div style="
+        position: absolute; 
+        bottom: 35px; 
+        right: 30px; 
+        color: white; 
+        font-family: Arial, sans-serif; 
+        font-size: 14px;
+        opacity: 0.8;
+    ">
+        <span id="progress-text">0%</span>
+    </div>
 </body>
 
 </html>
