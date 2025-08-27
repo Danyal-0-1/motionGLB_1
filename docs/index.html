@@ -74,7 +74,7 @@
         /* Inline seekbar container */
         #seekbar-container {
             position: absolute; 
-            bottom: 26px; /* Center align with 40px button */
+            bottom: 34px; /* Center align with 40px button */
             left: 85px; /* Start after the play button */
             right: 100px; /* Leave space for percentage */
             height: 12px; 
@@ -95,12 +95,13 @@
         #progress-text-container {
             position: absolute; 
             bottom: 24px; /* Center align with button and seekbar */
-            right: 30px; 
+            right: 10px; 
             color: white; 
             font-family: Arial, sans-serif; 
             font-size: 14px;
             opacity: 0.8;
             vertical-align: middle;
+            text-align: center;
             line-height: 16px; /* Match seekbar height for perfect alignment */
         }
     </style>
@@ -428,15 +429,15 @@
         const seekbarThumb = document.getElementById('seekbar-thumb');
         const frameInfo = document.getElementById('info');
         const progressText = document.getElementById('progress-text');
-        
+
         if (seekbarFill) {
-            seekbarFill.style.width = progress + '%';
+            seekbarFill.style.width = " " + progress + '%';
         }
         if (frameInfo) {
            // frameInfo.innerHTML = `<h1>${currSnap} / ${lastSnap}</h1>`;
         }
         if (progressText) {
-            progressText.textContent = Math.round(progress) + '%';
+            progressText.innerHTML = `${currSnap} / ${lastSnap} <br> <p style="text-align: center; margin:0px">(${Math.round(progress)}%)</p>`;
         }
     }
 
@@ -598,14 +599,14 @@
     <!-- Progress text -->
     <div style="
         position: absolute; 
-        bottom: 35px; 
-        right: 30px; 
+        bottom: 25px; 
+        right: 10px; 
         color: white; 
         font-family: Arial, sans-serif; 
         font-size: 14px;
         opacity: 0.8;
     ">
-        <span id="progress-text">0%</span>
+        <span id="progress-text" style="white-space: nowrap;text-align: center;">0%</span>
     </div>
 </body>
 
