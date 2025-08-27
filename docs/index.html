@@ -39,42 +39,227 @@
     controls.dampingFactor = 0.25;
     controls.enableZoom = true;
 
-    const ambientLight = new THREE.AmbientLight(0x404040); // Soft
+    // Get current time for dynamic daylight
+    function getTimeOfDay() {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        return hours + minutes / 60;
+    }
+
+    function getDaylightSettings() {
+        const timeOfDay = getTimeOfDay();
+        
+        // Define lighting and background phases with reduced brightness
+        if (timeOfDay >= 6 && timeOfDay < 8) {
+            // Dawn (6-8 AM) - Darker
+            return {
+                skyTop: 0xcc6633,
+                skyBottom: 0xb8860b,
+                fogColor: 0xb8860b,
+                sunColor: 0xffd700,
+                ambientColor: 0xfff4e6,
+                intensity: 0.8
+            };
+        } else if (timeOfDay >= 8 && timeOfDay < 12) {
+            // Morning (8 AM - 12 PM) - Muted blue
+            return {
+                skyTop: 0x4682b4,
+                skyBottom: 0x708090,
+                fogColor: 0x708090,
+                sunColor: 0xffffff,
+                ambientColor: 0xf0f8ff,
+                intensity: 1.2
+            };
+        } else if (timeOfDay >= 12 && timeOfDay < 17) {
+            // Afternoon (12 PM - 5 PM) - Darker blue
+            return {
+                skyTop: 0x2e4b75,
+                skyBottom: 0x4682b4,
+                fogColor: 0x4682b4,
+                sunColor: 0xffffff,
+                ambientColor: 0xf0f8ff,
+                intensity: 1.4
+            };
+        } else if (timeOfDay >= 17 && timeOfDay < 19) {
+            // Evening (5-7 PM) - Muted sunset
+            return {
+                skyTop: 0xb8432a,
+                skyBottom: 0xcd853f,
+                fogColor: 0xcd853f,
+                sunColor: 0xff8c42,
+                ambientColor: 0xffe4cc,
+                intensity: 1.0
+            };
+        } else if (timeOfDay >= 19 && timeOfDay < 21) {
+            // Dusk (7-9 PM) - Darker twilight
+            return {
+                skyTop: 0x2e1065,
+                skyBottom: 0xb22222,
+                fogColor: 0x654321,
+                sunColor: 0xff4500,
+                ambientColor: 0xffd4a3,
+                intensity: 0.6
+            };
+        } else {
+            // Night (9 PM - 6 AM) - Very dark
+            return {
+                skyTop: 0x000022,
+                skyBottom: 0x0f0f3a,
+                fogColor: 0x0f0f3a,
+                sunColor: 0x4169e1,
+                ambientColor: 0x404040,
+                intensity: 0.3
+            };
+        }
+    }
+
+    // Create dynamic sky background
+    const skyGeometry = new THREE.SphereGeometry(200, 32, 32);
+    const skyMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            topColor: { value: new THREE.Color(0x0077ff) },
+            bottomColor: { value: new THREE.Color(0xffffff) },
+            offset: { value: 15 },
+            exponent: { value: 0.8 }
+        },
+        vertexShader: `
+            varying vec3 vWorldPosition;
+            void main() {
+                vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+                vWorldPosition = worldPosition.xyz;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragmentShader: `
+            uniform vec3 topColor;
+            uniform vec3 bottomColor;
+            uniform float offset;
+            uniform float exponent;
+            varying vec3 vWorldPosition;
+            void main() {
+                float h = normalize(vWorldPosition + offset).y;
+                gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
+            }
+        `,
+        side: THREE.BackSide
+    });
+    
+    const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+    scene.add(sky);
+
+    // Add atmospheric fog with reduced visibility
+    scene.fog = new THREE.Fog(0x4682b4, 30, 120);
+
+    // Function to update background based on time of day
+    function updateDaylightBackground() {
+        const settings = getDaylightSettings();
+        
+        // Update sky colors with reduced intensity
+        skyMaterial.uniforms.topColor.value.setHex(settings.skyTop);
+        skyMaterial.uniforms.bottomColor.value.setHex(settings.skyBottom);
+        
+        // Update fog color and make it more dense for subtlety
+        scene.fog.color.setHex(settings.fogColor);
+        scene.fog.near = 25;
+        scene.fog.far = settings.intensity > 1.0 ? 140 : 120;
+        
+        // Update scene background color with reduced brightness
+        const bgColor = new THREE.Color(settings.skyBottom);
+        bgColor.multiplyScalar(0.7); // Reduce background brightness by 30%
+        scene.background = bgColor;
+    }
+
+    // Initialize daylight background
+    updateDaylightBackground();
+
+    // Soft warm ambient light for base illumination
+    const ambientLight = new THREE.AmbientLight(0xfff4e6, 0.6); // Warm white ambient
     scene.add(ambientLight);
 
-    // 4 spot lights
-    const spotLight1 = new THREE.SpotLight(0xffffff, 10);
-    spotLight1.position.set(1, 1, 1);
-    spotLight1.castShadow = true;
-    scene.add(spotLight1);
+    // Main soft warm key light
+    const keyLight = new THREE.DirectionalLight(0xfff0d4, 1.2); // Soft warm white
+    keyLight.position.set(3, 8, 5);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.camera.near = 0.5;
+    keyLight.shadow.camera.far = 50;
+    keyLight.shadow.camera.left = -15;
+    keyLight.shadow.camera.right = 15;
+    keyLight.shadow.camera.top = 15;
+    keyLight.shadow.camera.bottom = -15;
+    keyLight.shadow.bias = -0.0001;
+    keyLight.shadow.radius = 10; // Soft shadows
+    scene.add(keyLight);
 
-    const spotLight2 = new THREE.SpotLight(0xffffff, 10);
-    spotLight2.position.set(-1, 1, 1);
-    spotLight2.castShadow = true;
-    scene.add(spotLight2);
+    // Soft fill lights for even illumination
+    const fillLight1 = new THREE.DirectionalLight(0xffe4cc, 0.8); // Warm peach
+    fillLight1.position.set(-5, 5, 3);
+    scene.add(fillLight1);
 
-    const spotLight3 = new THREE.SpotLight(0xffffff, 10);
-    spotLight3.position.set(1, -1, 1);
-    spotLight3.castShadow = true;
-    scene.add(spotLight3);
+    const fillLight2 = new THREE.DirectionalLight(0xfff0d4, 0.6); // Warm white
+    fillLight2.position.set(5, -3, 8);
+    scene.add(fillLight2);
 
-    const spotLight4 = new THREE.SpotLight(0xffffff, 10);
-    spotLight4.position.set(-1, -1, 1);
-    spotLight4.castShadow = true;
-    scene.add(spotLight4);
+    const fillLight3 = new THREE.DirectionalLight(0xffedd5, 0.5); // Warm cream
+    fillLight3.position.set(-3, 3, -5);
+    scene.add(fillLight3);
 
-    //directional light on top
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 10);
-    directionalLight.position.set(0, 1, 0);
-    directionalLight.castShadow = true;
-    scene.add(directionalLight);
+    // Soft rim lights for definition
+    const rimLight1 = new THREE.DirectionalLight(0xfff8dc, 0.4); // Very soft warm
+    rimLight1.position.set(0, 8, -10);
+    scene.add(rimLight1);
+
+    const rimLight2 = new THREE.DirectionalLight(0xffefd5, 0.3); // Papaya whip
+    rimLight2.position.set(-8, 2, -3);
+    scene.add(rimLight2);
+
+    // Bounced light from below for realistic fill
+    const bounceLight = new THREE.DirectionalLight(0xfff0d4, 0.4);
+    bounceLight.position.set(0, -8, 0);
+    scene.add(bounceLight);
+
+    // Additional hemisphere light for even softer fill
+    const hemisphereLight = new THREE.HemisphereLight(0xfff4e6, 0xffe4cc, 0.5);
+    hemisphereLight.position.set(0, 10, 0);
+    scene.add(hemisphereLight);
+
+    // Top spotlight for focused model illumination
+    const topSpotlight = new THREE.SpotLight(0xffffff, 2.0); // Bright white spotlight
+    topSpotlight.position.set(0, 15, 0); // Positioned directly above
+    topSpotlight.target.position.set(0, 0, 0); // Targeting center of scene
+    topSpotlight.angle = Math.PI / 6; // 30 degree cone
+    topSpotlight.penumbra = 0.3; // Soft edge falloff
+    topSpotlight.decay = 1; // Natural light falloff
+    topSpotlight.distance = 30; // Light reaches 30 units
+    topSpotlight.castShadow = true;
+    
+    // High quality shadow settings for the spotlight
+    topSpotlight.shadow.mapSize.width = 1024;
+    topSpotlight.shadow.mapSize.height = 1024;
+    topSpotlight.shadow.camera.near = 0.5;
+    topSpotlight.shadow.camera.far = 30;
+    topSpotlight.shadow.focus = 1;
+    topSpotlight.shadow.bias = -0.0002;
+    
+    scene.add(topSpotlight);
+    scene.add(topSpotlight.target); // Add the target to the scene
 
     let lastModelSwitch = 0;
+    let lastBackgroundUpdate = 0;
+    const backgroundUpdateInterval = 60000; // Update every minute
 
     function animate() {
         requestAnimationFrame(animate);
         
         const currentTime = Date.now();
+        
+        // Update daylight background every minute
+        if (currentTime - lastBackgroundUpdate >= backgroundUpdateInterval) {
+            updateDaylightBackground();
+            lastBackgroundUpdate = currentTime;
+        }
         
         // Switch models at specified interval
         if (currentTime - lastModelSwitch >= modelSwitchInterval) {
