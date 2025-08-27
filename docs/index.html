@@ -30,7 +30,8 @@
 </head>
 <script>
     var model = null;
-    const modelSwitchInterval = 1000 / 20;
+    var fps = 20;
+    const modelSwitchInterval = 1000 / fps;
     var currSnap = 1;
     var lastSnap = 1200;
 </script>
@@ -53,13 +54,16 @@
 
 
 
-    camera.position.z = 5;
+    camera.position.z = 2;
+    camera.position.y = 3.2;
+
 
     // controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; // an animation effect
     controls.dampingFactor = 0.25;
     controls.enableZoom = true;
+
 
     // Get current time for dynamic daylight
     function getTimeOfDay() {
@@ -420,7 +424,7 @@
         loader.load(url, function (gltf) {
             scene.add(gltf.scene);
             gltf.scene.scale.set(4, 4, 4); // Adjust scale as needed
-            gltf.scene.position.set(0, 0, 0); // Center the model
+            gltf.scene.position.set(0, -1.2, 0); // Center the model
             if (model) {
                 function y(m) {
                     setTimeout(() => {
