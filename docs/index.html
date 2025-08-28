@@ -135,7 +135,7 @@
     var model = null;
     const modelSwitchInterval = 1000 / 20;
     var currSnap = 1;
-    var lastSnap = 2400;
+    var lastSnap = 2450;
     var isPlaying = true; // Track play/pause state
 
     // Global play/pause function accessible from HTML
@@ -187,6 +187,31 @@
     
     // Enable XR support for VR
     renderer.xr.enabled = true;
+    
+    // Configure VR camera to be in front of model at eye level
+    renderer.xr.addEventListener('sessionstart', () => {
+        // Position VR user in front of the model at comfortable viewing distance
+        // Model is at y = -0.7, so position user at eye level (y = 0) looking down slightly
+        const vrCameraGroup = new THREE.Group();
+        vrCameraGroup.position.set(0, 0, 3); // 3 units in front of model
+        vrCameraGroup.lookAt(0, -0.5, 0); // Look slightly down at the model center
+        
+        // Create reference space offset to position user correctly
+        const offsetPosition = { x: 0, y: 0, z: -3 }; // User positioned 3 units back from origin
+        const offsetRotation = { x: 0, y: 0, z: 0, w: 1 }; // No initial rotation
+        
+        try {
+            const transform = new XRRigidTransform(offsetPosition, offsetRotation);
+            renderer.xr.getReferenceSpace().then((referenceSpace) => {
+                const offsetReferenceSpace = referenceSpace.getOffsetReferenceSpace(transform);
+                renderer.xr.setReferenceSpace(offsetReferenceSpace);
+            }).catch((error) => {
+                console.warn('Could not set VR reference space:', error);
+            });
+        } catch (error) {
+            console.warn('XRRigidTransform not available:', error);
+        }
+    });
     
     // Create clipping plane to hide bottom 20% of model
     // The model is positioned at y = -0.7 and scaled by 4
