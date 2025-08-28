@@ -6,6 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Motion GLB</title>
     <style>
+
+        #VRButton{
+            position: fixed !important;
+            top: 0px !important;
+            right: 0px !important;
+            max-height: 60px !important;
+            z-index: 1000 !important;
+            border-radius: 8px !important;
+            background: rgba(0, 0, 0, 0.8) !important;
+            color: white !important;
+            border: 2px solid #667eea !important;
+            padding: 10px 15px !important;
+            font-size: 14px !important;
+            font-family: Arial, sans-serif !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            margin-left: auto !important;
+        }
+        
+        #VRButton:hover {
+            background: rgba(102, 126, 234, 0.9) !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5) !important;
+        }
         #seekbar-container:hover #seekbar-thumb {
             opacity: 1 !important;
             transform: translateY(-50%) scale(1.2) !important;
@@ -59,6 +83,7 @@
         /* Play/Pause Icons */
         .play-icon, .pause-icon {
             color: white;
+            background-color: transparent;
             font-size: 16px;
             transition: all 0.2s ease;
         }
@@ -143,6 +168,7 @@
     import * as THREE from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/three.module.js';
     import { GLTFLoader } from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/GLTFLoader.js';
     import { OrbitControls } from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/OrbitControls.js';
+    import { VRButton } from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/VRButton.js';
     import Stats from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/stats.module.js';
 
     const stats = new Stats();
@@ -159,6 +185,9 @@
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     
+    // Enable XR support for VR
+    renderer.xr.enabled = true;
+    
     // Create clipping plane to hide bottom 20% of model
     // The model is positioned at y = -0.7 and scaled by 4
     // So we need to clip at approximately y = -0.7 - (model_height * 0.2)
@@ -166,6 +195,23 @@
     const clippingPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1.12);
     
     document.body.appendChild(renderer.domElement);
+    
+    // Add VR button in top right corner
+    const vrButton = VRButton.createButton(renderer);
+    vrButton.style.position = 'absolute';
+    vrButton.style.top = '20px';
+    vrButton.style.right = '20px';
+    vrButton.style.zIndex = '1000';
+    vrButton.style.borderRadius = '8px';
+    vrButton.style.background = 'rgba(0, 0, 0, 0.8)';
+    vrButton.style.color = 'white';
+    vrButton.style.border = '2px solid #667eea';
+    vrButton.style.padding = '10px 15px';
+    vrButton.style.fontSize = '14px';
+    vrButton.style.fontFamily = 'Arial, sans-serif';
+    vrButton.style.cursor = 'pointer';
+    vrButton.style.transition = 'all 0.3s ease';
+    document.body.appendChild(vrButton);
 
 
 
@@ -393,8 +439,6 @@
     const backgroundUpdateInterval = 60000; // Update every minute
 
     function animate() {
-        requestAnimationFrame(animate);
-        
         const currentTime = Date.now();
         
         // Update daylight background every minute
@@ -417,7 +461,16 @@
             if(currSnap < lastSnap) {
                 currSnap++;
             } else {
-                currSnap = 1;
+                // Stop playing when reaching the end and reset to beginning
+                isPlaying = false;
+                currSnap = 1; // Reset to first frame
+                const button = document.getElementById('play-pause-button');
+                const icon = button.querySelector('.play-icon, .pause-icon');
+                if (icon) {
+                    icon.className = 'play-icon';
+                }
+                // Update seekbar to reflect reset position
+                updateSeekbar();
             }
         }
         
@@ -425,8 +478,8 @@
         renderer.render(scene, camera);
     }
 
-    // Start the animation loop
-    animate();
+    // Use XR-compatible animation loop
+    renderer.setAnimationLoop(animate);
 
     function onWindowResize() {
         camera.aspect = window.innerWidth / window.innerHeight;
