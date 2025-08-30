@@ -5,6 +5,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Motion GLB</title>
+
+    <script>
+    var model = null;
+    const modelSwitchInterval = 1000 / 120;
+    var firstSnap = 1;
+    var currSnap = firstSnap;
+    var lastSnap = 5000;
+    var isPlaying = true; // Track play/pause state
+
+    // Global play/pause function accessible from HTML
+    function togglePlayPause() {
+        isPlaying = !isPlaying;
+        const button = document.getElementById('play-pause-button');
+        const icon = button.querySelector('.play-icon, .pause-icon');
+        
+        if (isPlaying) {
+            icon.className = 'pause-icon';
+            // Reset timer to avoid immediate frame switch when resuming
+            if (window.lastModelSwitch !== undefined) {
+                window.lastModelSwitch = Date.now();
+            }
+        } else {
+            icon.className = 'play-icon';
+        }
+    }
+
+    // Keyboard controls
+    document.addEventListener('keydown', function(e) {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            togglePlayPause();
+        }
+    });
+</script>
+
     <style>
 
         #VRButton{
@@ -131,38 +166,7 @@
         }
     </style>
 </head>
-<script>
-    var model = null;
-    const modelSwitchInterval = 1000 / 20;
-    var currSnap = 1;
-    var lastSnap = 2500;
-    var isPlaying = true; // Track play/pause state
 
-    // Global play/pause function accessible from HTML
-    function togglePlayPause() {
-        isPlaying = !isPlaying;
-        const button = document.getElementById('play-pause-button');
-        const icon = button.querySelector('.play-icon, .pause-icon');
-        
-        if (isPlaying) {
-            icon.className = 'pause-icon';
-            // Reset timer to avoid immediate frame switch when resuming
-            if (window.lastModelSwitch !== undefined) {
-                window.lastModelSwitch = Date.now();
-            }
-        } else {
-            icon.className = 'play-icon';
-        }
-    }
-
-    // Keyboard controls
-    document.addEventListener('keydown', function(e) {
-        if (e.code === 'Space') {
-            e.preventDefault();
-            togglePlayPause();
-        }
-    });
-</script>
 
 <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/gh/mesquite-mocap/mesquite.cc/build-static/three.module.js';
@@ -474,7 +478,7 @@
         
         // Switch models at specified interval (only if playing)
         if (isPlaying && currentTime - lastModelSwitch >= modelSwitchInterval) {
-            var folder = String(currSnap).padStart(5, '0');
+            var folder = String(currSnap - firstSnap).padStart(5, '0');
             var file = `../data/scripts/images/${folder}/output.glb`;
             loadModel(file);
             lastModelSwitch = currentTime;
@@ -488,7 +492,7 @@
             } else {
                 // Stop playing when reaching the end and reset to beginning
                 isPlaying = false;
-                currSnap = 1; // Reset to first frame
+                currSnap = firstSnap;
                 const button = document.getElementById('play-pause-button');
                 const icon = button.querySelector('.play-icon, .pause-icon');
                 if (icon) {
@@ -527,7 +531,8 @@
            // frameInfo.innerHTML = `<h1>${currSnap} / ${lastSnap}</h1>`;
         }
         if (progressText) {
-            progressText.innerHTML = `${currSnap} / ${lastSnap} <br> <p style="text-align: center; margin:0px">(${Math.round(progress)}%)</p>`;
+            var x = lastSnap - firstSnap + 1;
+            progressText.innerHTML = `${currSnap} / ${x} <br> <p style="text-align: center; margin:0px">(${Math.round(progress)}%)</p>`;
         }
     }
 
