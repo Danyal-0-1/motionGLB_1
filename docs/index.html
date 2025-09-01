@@ -19,7 +19,7 @@
         isPlaying = !isPlaying;
         const button = document.getElementById('play-pause-button');
         const icon = button.querySelector('.play-icon, .pause-icon');
-        
+         
         if (isPlaying) {
             icon.className = 'pause-icon';
             // Reset timer to avoid immediate frame switch when resuming
