@@ -247,8 +247,8 @@
 
 
 
-    camera.position.z = 2.3;
-    camera.position.y = 2.9;
+   // camera.position.z = 2.3;
+   // camera.position.y = 2.9;
 
 
     // controls
@@ -638,7 +638,7 @@
         loader.load(url, function (gltf) {
             const newModel = gltf.scene;
             newModel.scale.set(4, 4, 4);
-            newModel.position.set(0, -.7, 0);
+            newModel.position.set(0, 0, -5);
             
             // Apply clipping plane to all materials
             newModel.traverse((child) => {
