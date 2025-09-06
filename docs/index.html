@@ -482,8 +482,10 @@
         // Switch models at specified interval (only if playing)
         if (isPlaying && currentTime - lastModelSwitch >= modelSwitchInterval) {
             var folder = String(currSnap - firstSnap).padStart(5, '0');
-            //var file = `./images/${folder}/output.glb`;
             var file = `https://cdn.jsdelivr.net/gh/tejaswigowda/motionGLB/data/scripts/images/${folder}/output.glb`;
+            if(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'http:') {
+                file = `../data/scripts/images/${folder}/output.glb`;
+            }
             loadModel(file);
             lastModelSwitch = currentTime;
             window.lastModelSwitch = currentTime; // Keep global sync
